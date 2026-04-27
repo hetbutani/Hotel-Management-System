@@ -21,10 +21,27 @@ def catch_all(path):
         if 'rooms/featured' in path:
             rooms = list(db['rooms'].find({}, {'_id': 0}))
             return jsonify(rooms)
+        elif 'rooms/search' in path:
+            data = request.get_json()
+            guests_str = data.get('guests', '1 Guest')
+            guests = int(guests_str.split(' ')[0].replace('+', ''))
+            query = {"capacity": {"$gte": guests}}
+            available_rooms = list(db['rooms'].find(query, {'_id': 0}))
+            return jsonify(available_rooms)
         elif 'rooms/details' in path:
             title = path.split('/')[-1]
             room = db['rooms'].find_one({"title": title}, {'_id': 0})
-            return jsonify(room) if room else (jsonify({"error": "not found"}), 404)
+            return jsonify(room) if room else (jsonify({"error": f"Room '{title}' not found"}), 404)
+        elif 'bookings' in path:
+            data = request.get_json()
+            db['bookings'].insert_one({
+                "room_title": data.get('room_title'),
+                "check_in": data.get('check_in'),
+                "check_out": data.get('check_out'),
+                "guests": data.get('guests'),
+                "status": "Confirmed"
+            })
+            return jsonify({"message": "Booking successful"}), 201
         elif 'reviews' in path:
             reviews = list(db['reviews'].find({}, {'_id': 0}))
             return jsonify(reviews)
