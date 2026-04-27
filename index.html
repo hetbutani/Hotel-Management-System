@@ -312,12 +312,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ check_in: checkIn, check_out: checkOut, guests: guests })
             });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Server returned ${response.status}: ${errorData.error || errorData.trace || response.statusText}`);
+            }
             const rooms = await response.json();
             renderRooms(rooms);
             document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });
         } catch (error) {
             console.error('Error searching rooms:', error);
-            container.innerHTML = '<p class="text-center col-span-full font-body-md text-error">Failed to search rooms. Please try again later.</p>';
+            container.innerHTML = `<p class="text-center col-span-full font-body-md text-error">Search failed: ${error.message}</p>`;
         }
     });
 });
