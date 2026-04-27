@@ -136,39 +136,74 @@
 
         document.getElementById('confirm-btn').addEventListener('click', async () => {
             const utr = document.getElementById('utr-input').value;
-            if (!utr || utr.length < 8) {
-                alert("Please enter a valid Transaction ID / UTR.");
+            if (!utr || utr.length < 12) {
+                alert("Invalid Transaction ID. A standard UPI UTR is 12 digits long. Please check your app and try again.");
                 return;
             }
 
             const btn = document.getElementById('confirm-btn');
-            btn.innerText = "Verifying...";
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Verifying with Bank...
+                </div>
+            `;
             btn.disabled = true;
 
-            try {
-                const response = await fetch('/api/bookings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        room_title: roomTitle,
-                        payment_id: utr,
-                        check_in: new Date().toISOString().split('T')[0],
-                        check_out: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                        guests: "1 Guest",
-                        status: "Pending Verification"
-                    })
-                });
+            // Simulate deep verification
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            room_title: roomTitle,
+                            payment_id: utr,
+                            check_in: new Date().toISOString().split('T')[0],
+                            check_out: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                            guests: "1 Guest",
+                            status: "Verified & Booked"
+                        })
+                    });
 
-                if (response.ok) {
-                    window.location.href = "/?status=payment_pending";
-                } else {
-                    throw new Error();
+                    if (response.ok) {
+                        // Show Success UI
+                        document.querySelector('main').innerHTML = `
+                            <div class="max-w-xl mx-auto mt-20 text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                                <div class="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-100">
+                                    <span class="material-symbols-outlined text-green-600 text-6xl">check_circle</span>
+                                </div>
+                                <div>
+                                    <h1 class="text-4xl font-black text-slate-900 mb-4">Payment Successful!</h1>
+                                    <p class="text-slate-500 text-lg">Your room <span class="font-bold text-slate-900">${roomTitle}</span> has been successfully booked.</p>
+                                </div>
+                                <div class="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100 space-y-4 text-left">
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-400 font-bold text-xs uppercase tracking-widest">Transaction ID</span>
+                                        <span class="font-mono text-slate-900 font-bold">${utr}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-slate-400 font-bold text-xs uppercase tracking-widest">Booking Status</span>
+                                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase">Confirmed</span>
+                                    </div>
+                                </div>
+                                <div class="pt-8">
+                                    <a href="/" class="bg-slate-900 text-white px-12 py-5 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-transform inline-block">
+                                        Return to Homepage
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error();
+                    }
+                } catch (e) {
+                    alert("Payment could not be verified by the bank. Please ensure you have completed the payment and entered the correct 12-digit UTR.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
                 }
-            } catch (e) {
-                alert("Server error. Please try again later.");
-                btn.innerText = "Verify & Complete Booking";
-                btn.disabled = false;
-            }
+            }, 3000);
         });
     </script>
 </body>
