@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LuxeStay - Premium Hotel Booking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#004ac6",
+                        "surface-tint": "#0053db",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-container": "#684000",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#e5eeff",
+                        "background": "#f8f9ff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-surface": "#0b1c30",
+                        "secondary-fixed": "#ffddb8",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-primary": "#b4c5ff",
+                        "surface-variant": "#d3e4fe",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "outline-variant": "#c3c6d7",
+                        "primary-container": "#2563eb",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "tertiary": "#006242",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#2a1700",
+                        "on-background": "#0b1c30",
+                        "on-surface-variant": "#434655",
+                        "tertiary-container": "#007d55",
+                        "secondary-container": "#fea619",
+                        "surface": "#f8f9ff",
+                        "secondary": "#855300",
+                        "on-primary-container": "#eeefff",
+                        "inverse-surface": "#213145",
+                        "on-tertiary-container": "#bdffdb",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline": "#737686",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "container-max": "1440px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "xxl": "64px",
+                        "md": "16px",
+                        "base": "4px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "stat-value": ["Plus Jakarta Sans"],
+                        "body-md": ["Inter"],
+                        "h1": ["Plus Jakarta Sans"],
+                        "body-lg": ["Inter"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h3": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "stat-value": ["28px", { "lineHeight": "1", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "h1": ["40px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "h2": ["32px", { "lineHeight": "1.25", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "h3": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar (From JSON) - Modifying slightly for Guest Landing Page context, hiding drawer logic -->
+<header class="sticky top-0 z-40 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none flex justify-between items-center px-6 h-16 ml-auto">
+<div class="flex items-center gap-md">
+<span class="text-xl font-black text-slate-800 dark:text-white font-h3 text-h3 tracking-tight">LuxeStay</span>
+</div>
+<nav class="hidden md:flex gap-lg items-center">
+<a class="text-blue-600 font-bold border-b-2 border-blue-600 font-label-caps text-label-caps uppercase tracking-wider py-2" href="#">Home</a>
+<a class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-label-caps text-label-caps uppercase tracking-wider py-2 transition-colors" href="#rooms">Rooms</a>
+<a class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-label-caps text-label-caps uppercase tracking-wider py-2 transition-colors" href="#testimonials">Reviews</a>
+<a class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-label-caps text-label-caps uppercase tracking-wider py-2 transition-colors" href="#contact">Contact</a>
+<a class="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 font-label-caps text-label-caps uppercase tracking-wider py-2 transition-colors" href="../auth/login.html">Admin</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-on-primary hover:bg-surface-tint rounded-full px-6 py-2 font-label-caps text-label-caps uppercase tracking-wider transition-all shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]">Book Now</button>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative h-[707px] min-h-[600px] w-full flex items-center justify-center">
+<div class="absolute inset-0 z-0">
+<img alt="Hero Background" class="w-full h-full object-cover" data-alt="luxurious hotel exterior at twilight with warm interior lighting reflecting on a pristine infinity pool, elegant architecture, serene mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZus8cX5Qb2GZOOUHHbYjPZemttDagcQnIqvpr4uXrGCZdMRvMGoAxeUFZWQ1iwb_s7nDR6WqeXlLQJ75jb6e-_5342ukFBQXA3fRxjQUz8yMkhm1noO1ZyDsPPUYdYfaGF335ni6oKBPoPciJR3n-xTLFZqSsRbLsSXf1PmdWx7OkoTIh3xnKCC7W8PfYAEAUE5_vmuwQ-Bk9YabPX58uM1eJrDcXe-h7QmgSOd34csai7GOEb5MZH-36VmqP15XBe3l2oN0tBTKk"/>
+<div class="absolute inset-0 bg-black/40"></div>
+</div>
+<div class="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
+<h1 class="font-h1 text-h1 text-white mb-lg text-balance drop-shadow-lg">Experience Unparalleled Luxury</h1>
+<p class="font-body-lg text-body-lg text-white/90 mb-xl max-w-2xl text-balance drop-shadow-md">Discover a world of refined elegance, impeccable service, and unforgettable moments at LuxeStay.</p>
+<!-- Quick Booking Bar -->
+<div class="glass-panel rounded-xl p-md flex flex-col md:flex-row gap-md items-center w-full max-w-3xl shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]">
+<div class="flex-1 w-full relative">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs ml-sm uppercase">Check In</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+<input id="check-in" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-body-sm text-body-sm text-on-surface focus:ring-2 focus:ring-primary focus:bg-white transition-colors cursor-pointer" type="date"/>
+</div>
+</div>
+<div class="w-px h-12 bg-outline-variant hidden md:block"></div>
+<div class="flex-1 w-full relative">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs ml-sm uppercase">Check Out</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">calendar_today</span>
+<input id="check-out" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-body-sm text-body-sm text-on-surface focus:ring-2 focus:ring-primary focus:bg-white transition-colors cursor-pointer" type="date"/>
+</div>
+</div>
+<div class="w-px h-12 bg-outline-variant hidden md:block"></div>
+<div class="flex-1 w-full relative">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs ml-sm uppercase">Guests</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">group</span>
+<select id="guest-count" class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 font-body-sm text-body-sm text-on-surface focus:ring-2 focus:ring-primary focus:bg-white transition-colors cursor-pointer appearance-none">
+<option>1 Guest</option>
+<option selected="">2 Guests</option>
+<option>3 Guests</option>
+<option>4+ Guests</option>
+</select>
+</div>
+</div>
+<button id="check-availability" class="w-full md:w-auto bg-primary text-on-primary hover:bg-surface-tint rounded-lg px-8 py-4 font-label-caps text-label-caps uppercase tracking-wider transition-all shadow-md mt-4 md:mt-0 h-full flex items-center justify-center whitespace-nowrap">
+                        Check Availability
+                    </button>
+</div>
+</div>
+</section>
+<!-- Featured Rooms Section -->
+<section class="py-xxl max-w-container-max mx-auto px-6 lg:px-lg" id="rooms">
+<div class="text-center mb-xl">
+<h2 class="font-h2 text-h2 text-on-surface mb-sm">Signature Accommodations</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Thoughtfully designed spaces that blend modern comfort with timeless sophistication.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" id="rooms-container">
+    <p class="text-center col-span-full font-body-md text-on-surface-variant">Loading accommodations...</p>
+</div>
+</section>
+</main>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const container = document.getElementById('rooms-container');
+    
+    const renderRooms = (rooms) => {
+        container.innerHTML = '';
+        if (rooms.length === 0) {
+            container.innerHTML = '<p class="text-center col-span-full font-body-md text-on-surface-variant">No accommodations available.</p>';
+            return;
+        }
+
+        rooms.forEach(room => {
+            const featuresHtml = room.features.map(f => `
+                <span class="inline-flex items-center gap-1 bg-surface-container-low text-on-surface px-2 py-1 rounded font-label-caps text-label-caps">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">${f.icon}</span> ${f.text}
+                </span>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.className = 'group bg-white rounded-xl overflow-hidden shadow-[0_2px_4px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] transition-all duration-300 flex flex-col';
+            card.innerHTML = `
+                <div class="relative h-64 overflow-hidden">
+                    <img alt="${room.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${room.image_url}" />
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-secondary-container" style="font-size: 16px; font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="font-label-caps text-label-caps text-on-surface font-bold">${room.rating}</span>
+                    </div>
+                </div>
+                <div class="p-lg flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-sm">
+                        <h3 class="font-h3 text-h3 text-on-surface">${room.title}</h3>
+                        <div class="text-right">
+                            <span class="block font-stat-value text-stat-value text-primary">$${room.price}</span>
+                            <span class="font-body-sm text-body-sm text-on-surface-variant">/ night</span>
+                        </div>
+                    </div>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant mb-md line-clamp-2">${room.description}</p>
+                    <div class="flex flex-wrap gap-xs mb-lg">
+                        ${featuresHtml}
+                    </div>
+                    <div class="mt-auto pt-md border-t border-outline-variant flex justify-between items-center">
+                        <button class="view-details font-label-caps text-label-caps text-primary hover:text-surface-tint uppercase tracking-wider font-semibold transition-colors">View Details</button>
+                        <button class="select-room bg-surface-container-high text-on-surface hover:bg-surface-variant px-4 py-2 rounded-lg font-label-caps text-label-caps uppercase tracking-wider transition-colors">Select Room</button>
+                    </div>
+                </div>
+            `;
+            
+            card.querySelector('.view-details').addEventListener('click', () => {
+                window.location.href = `room_details.html?room=${encodeURIComponent(room.title)}`;
+            });
+
+            card.querySelector('.select-room').addEventListener('click', async () => {
+                const checkIn = document.getElementById('check-in').value;
+                const checkOut = document.getElementById('check-out').value;
+                const guests = document.getElementById('guest-count').value;
+
+                if (!checkIn || !checkOut) {
+                    alert('Please select check-in and check-out dates first!');
+                    document.getElementById('check-in').focus();
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/bookings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            room_title: room.title,
+                            check_in: checkIn,
+                            check_out: checkOut,
+                            guests: guests
+                        })
+                    });
+                    if (res.ok) {
+                        alert(`Success! You have successfully selected the ${room.title}. We look forward to seeing you!`);
+                    } else {
+                        alert('Booking failed. Please try again.');
+                    }
+                } catch (e) {
+                    alert('Error connecting to booking service.');
+                }
+            });
+
+            container.appendChild(card);
+        });
+    };
+
+    // Initial load
+    try {
+        const response = await fetch('/api/rooms/featured');
+        if (!response.ok) throw new Error('Failed to fetch rooms');
+        const rooms = await response.json();
+        renderRooms(rooms);
+    } catch (error) {
+        console.error('Error fetching rooms:', error);
+        container.innerHTML = '<p class="text-center col-span-full font-body-md text-error">Failed to load accommodations. Please ensure the backend is running.</p>';
+    }
+
+    // Search Logic
+    const searchBtn = document.getElementById('check-availability');
+    searchBtn.addEventListener('click', async () => {
+        const checkIn = document.getElementById('check-in').value;
+        const checkOut = document.getElementById('check-out').value;
+        const guests = document.getElementById('guest-count').value;
+
+        if (!checkIn || !checkOut) {
+            alert('Please select both check-in and check-out dates.');
+            return;
+        }
+
+        container.innerHTML = '<p class="text-center col-span-full font-body-md text-on-surface-variant">Searching for available rooms...</p>';
+
+        try {
+            const response = await fetch('/api/rooms/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ check_in: checkIn, check_out: checkOut, guests: guests })
+            });
+            const rooms = await response.json();
+            renderRooms(rooms);
+            document.getElementById('rooms').scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            console.error('Error searching rooms:', error);
+            container.innerHTML = '<p class="text-center col-span-full font-body-md text-error">Failed to search rooms. Please try again later.</p>';
+        }
+    });
+});
+</script>
+
+
+
+<!-- Testimonials Section -->
+<section class="py-xxl bg-slate-50 dark:bg-slate-900/30" id="testimonials">
+    <div class="max-w-container-max mx-auto px-6 lg:px-lg">
+        <div class="text-center mb-xl">
+            <h2 class="font-h2 text-h2 text-on-surface mb-sm">What Our Guests Say</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Real stories from travelers who have experienced the LuxeStay standard of excellence.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter" id="reviews-container">
+            <!-- Reviews will load here -->
+            <p class="text-center col-span-full text-slate-400">Loading guest stories...</p>
+        </div>
+    </div>
+</section>
+
+<script>
+// Append to existing script or add new one
+document.addEventListener('DOMContentLoaded', async () => {
+    // Reviews Fetching Logic
+    const reviewsContainer = document.getElementById('reviews-container');
+    try {
+        const response = await fetch('/api/reviews');
+        const reviews = await response.json();
+        reviewsContainer.innerHTML = '';
+        
+        reviews.forEach(review => {
+            const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+            const card = document.createElement('div');
+            card.className = 'bg-white dark:bg-slate-800 p-lg rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col h-full';
+            card.innerHTML = `
+                <div class="text-secondary-container mb-4 text-xl">${stars}</div>
+                <p class="font-body-md text-slate-600 dark:text-slate-300 italic mb-6 flex-grow">"${review.content}"</p>
+                <div class="flex items-center gap-4">
+                    <img src="${review.avatar}" class="w-12 h-12 rounded-full object-cover">
+                    <div>
+                        <h4 class="font-bold text-slate-800 dark:text-white">${review.name}</h4>
+                        <p class="text-xs text-slate-500 uppercase tracking-wider font-semibold">${review.role}</p>
+                    </div>
+                </div>
+            `;
+            reviewsContainer.appendChild(card);
+        });
+    } catch (e) {
+        reviewsContainer.innerHTML = '<p class="text-center col-span-full text-red-400">Unable to load reviews.</p>';
+    }
+});
+</script>
+
+
+<!-- Contact Section -->
+<section class="py-xxl bg-white dark:bg-slate-950" id="contact">
+    <div class="max-w-7xl mx-auto px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <div>
+                <h2 class="text-h2 font-h2 text-on-surface mb-6">Get in Touch</h2>
+                <p class="text-body-lg text-on-surface-variant mb-10 leading-relaxed">
+                    Have questions about our suites or amenities? Our concierge team is available 24/7 to assist you with your booking or any special requests.
+                </p>
+                
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-blue-600">location_on</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Our Location</h4>
+                            <p class="text-slate-500">123 Luxury Way, Coastal Paradise, CP 90210</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-blue-600">call</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Phone</h4>
+                            <p class="text-slate-500">+1 (555) LUX-STAY</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-blue-600">mail</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-900">Email</h4>
+                            <p class="text-slate-500">concierge@luxestay.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-900 p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <form id="contact-form" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Name</label>
+                            <input type="text" id="contact-name" required class="w-full bg-white dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Email</label>
+                            <input type="email" id="contact-email" required class="w-full bg-white dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Subject</label>
+                        <input type="text" id="contact-subject" required class="w-full bg-white dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Message</label>
+                        <textarea id="contact-message" rows="4" required class="w-full bg-white dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 transition-all transform active:scale-[0.98]">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('contact-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.innerText;
+    
+    const data = {
+        name: document.getElementById('contact-name').value,
+        email: document.getElementById('contact-email').value,
+        subject: document.getElementById('contact-subject').value,
+        message: document.getElementById('contact-message').value
+    };
+
+    btn.innerText = 'Sending...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            alert('Thank you! Your message has been sent to our concierge.');
+            e.target.reset();
+        } else {
+            alert('Something went wrong. Please try again.');
+        }
+    } catch (error) {
+        alert('Server error. Please check if the backend is running.');
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
+</script>
+
+<!-- Footer (From JSON) -->
+<footer class="w-full mt-auto py-8 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center px-8 gap-4">
+<div class="font-bold text-slate-400 font-h3 text-h3 text-center md:text-left">
+                LuxeStay
+            </div>
+<nav class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+<a class="text-slate-500 hover:text-blue-500 transition-colors text-xs font-body-sm" href="#">Support Center</a>
+<a class="text-slate-500 hover:text-blue-500 transition-colors text-xs font-body-sm" href="#">Privacy Policy</a>
+<a class="text-slate-500 hover:text-blue-500 transition-colors text-xs font-body-sm" href="#">Terms of Service</a>
+<a class="text-slate-500 hover:text-blue-500 transition-colors text-xs font-body-sm" href="#">API Documentation</a>
+</nav>
+<div class="text-xs text-slate-500 dark:text-slate-400 font-body-sm text-center md:text-right">
+                © 2024 LuxeStay Hospitality Systems. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>

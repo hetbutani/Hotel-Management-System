@@ -1,0 +1,6 @@
+flask
+flask-cors
+pymongo[srv]
+flask-jwt-extended
+bcrypt
+razorpay

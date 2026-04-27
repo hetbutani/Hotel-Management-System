@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LuxeStay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+    <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-30"></div>
+
+    <div class="w-full max-w-md relative z-10">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-blue-700 tracking-tight mb-2">LuxeStay</h1>
+            <p class="text-slate-500 font-medium uppercase tracking-widest text-xs">Hospitality Management System</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl shadow-xl p-8 md:p-10">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">Welcome Back</h2>
+            
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Email Address</label>
+                    <input type="email" id="email" required placeholder="admin@luxestay.com" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 ml-1">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                </div>
+
+                <div id="errorMsg" class="hidden text-red-500 text-sm font-medium bg-red-50 p-3 rounded-lg border border-red-100">
+                    Invalid credentials. Please try again.
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+                    Sign In to Portal
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-slate-100 flex justify-between items-center text-xs">
+                <a href="../guest_landing_page/code.html" class="text-blue-600 hover:text-blue-800 font-bold uppercase tracking-wider transition-colors flex items-center gap-1">
+                    ← Return to Site
+                </a>
+                <span class="text-slate-400">v1.0.4 Operational</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    localStorage.setItem('role', data.role);
+                    
+                    if (data.role === 'Admin') {
+                        window.location.href = '../admin_dashboard/code.html';
+                    } else {
+                        window.location.href = '../guest_landing_page/code.html';
+                    }
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMsg.textContent = 'Server connection failed. Is the backend running?';
+                errorMsg.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
