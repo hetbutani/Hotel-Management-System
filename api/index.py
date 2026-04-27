@@ -12,8 +12,8 @@ MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://hetbutani57:het5130O@clus
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client['hotel_management_db']
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
+@app.route('/<path:path>', methods=['GET', 'POST'])
 def catch_all(path):
     # This will catch everything sent to this function
     # We will manually route based on the path
