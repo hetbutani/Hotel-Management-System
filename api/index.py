@@ -7,7 +7,7 @@ import os
 import razorpay
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # JWT Configuration
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "luxe-stay-secret-key")
@@ -28,46 +28,38 @@ reviews_collection = db['reviews']
 bookings_collection = db['bookings']
 contacts_collection = db['contacts']
 
-@app.route('/api/health', methods=['GET'])
+# Health check
+@app.route('/api/health')
+@app.route('/health')
 def health_check():
     return jsonify({"status": "healthy", "message": "API is running on Vercel"}), 200
 
-# --- Routes: Auth ---
-
+# Auth
 @app.route('/api/auth/signup', methods=['POST'])
+@app.route('/auth/signup', methods=['POST'])
 def signup():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    role = data.get('role', 'Guest')
-
     if users_collection.find_one({"email": email}):
         return jsonify({"message": "User already exists"}), 400
-
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    users_collection.insert_one({
-        "email": email,
-        "password": hashed_password,
-        "role": role
-    })
+    users_collection.insert_one({"email": email, "password": hashed_password, "role": data.get('role', 'Guest')})
     return jsonify({"message": "User created successfully"}), 201
 
 @app.route('/api/auth/login', methods=['POST'])
+@app.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-
-    user = users_collection.find_one({"email": email})
-    if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
-        access_token = create_access_token(identity={"email": email, "role": user['role']})
+    user = users_collection.find_one({"email": data.get('email')})
+    if user and bcrypt.checkpw(data.get('password').encode('utf-8'), user['password']):
+        access_token = create_access_token(identity={"email": user['email'], "role": user['role']})
         return jsonify(access_token=access_token, role=user['role']), 200
-
     return jsonify({"message": "Invalid email or password"}), 401
 
-# --- Routes: Rooms ---
-
-@app.route('/api/rooms/featured', methods=['GET'])
+# Rooms
+@app.route('/api/rooms/featured')
+@app.route('/rooms/featured')
 def get_featured_rooms():
     try:
         rooms = list(rooms_collection.find({}, {'_id': 0}))
@@ -76,6 +68,7 @@ def get_featured_rooms():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/rooms/search', methods=['POST'])
+@app.route('/rooms/search', methods=['POST'])
 def search_rooms():
     try:
         data = request.get_json()
@@ -87,19 +80,20 @@ def search_rooms():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/rooms/details/<title>', methods=['GET'])
+@app.route('/api/rooms/details/<title>')
+@app.route('/rooms/details/<title>')
 def get_room_details(title):
     try:
         room = rooms_collection.find_one({"title": title}, {'_id': 0})
         if room:
             return jsonify(room), 200
-        return jsonify({"message": "Room not found"}), 404
+        return jsonify({"message": f"Room '{title}' not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Routes: Bookings ---
-
+# Bookings
 @app.route('/api/bookings', methods=['POST'])
+@app.route('/bookings', methods=['POST'])
 def create_booking():
     try:
         data = request.get_json()
@@ -108,7 +102,6 @@ def create_booking():
             "check_in": data.get('check_in'),
             "check_out": data.get('check_out'),
             "guests": data.get('guests'),
-            "customer_name": data.get('customer_name', 'Guest User'),
             "status": "Confirmed",
             "payment_id": data.get('payment_id')
         }
@@ -117,24 +110,20 @@ def create_booking():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Routes: Payments ---
-
+# Payments
 @app.route('/api/payments/create_order', methods=['POST'])
+@app.route('/payments/create_order', methods=['POST'])
 def create_payment_order():
     try:
         data = request.get_json()
         amount = int(data.get('amount')) * 100
-        order_data = {
-            "amount": amount,
-            "currency": "INR",
-            "payment_capture": 1
-        }
-        order = razorpay_client.order.create(data=order_data)
+        order = razorpay_client.order.create(data={"amount": amount, "currency": "INR", "payment_capture": 1})
         return jsonify(order), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/payments/verify', methods=['POST'])
+@app.route('/payments/verify', methods=['POST'])
 def verify_payment():
     try:
         data = request.get_json()
@@ -148,27 +137,26 @@ def verify_payment():
     except Exception as e:
         return jsonify({"error": "Payment verification failed"}), 400
 
-# --- Routes: Contact ---
-
+# Contact
 @app.route('/api/contact', methods=['POST'])
+@app.route('/contact', methods=['POST'])
 def handle_contact():
     try:
         data = request.get_json()
-        message = {
+        contacts_collection.insert_one({
             "name": data.get('name'),
             "email": data.get('email'),
             "subject": data.get('subject'),
             "message": data.get('message'),
             "status": "New"
-        }
-        contacts_collection.insert_one(message)
+        })
         return jsonify({"message": "Message sent successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Routes: Reviews ---
-
-@app.route('/api/reviews', methods=['GET'])
+# Reviews
+@app.route('/api/reviews')
+@app.route('/reviews')
 def get_reviews():
     try:
         reviews = list(reviews_collection.find({}, {'_id': 0}))
@@ -176,6 +164,5 @@ def get_reviews():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# For local development
 if __name__ == '__main__':
     app.run(debug=True)
