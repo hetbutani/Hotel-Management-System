@@ -150,7 +150,8 @@
                     </div>
                 `;
             } catch (error) {
-                content.innerHTML = '<p class="text-center text-red-500">Failed to load room details.</p>';
+                console.error(error);
+                content.innerHTML = `<p class="text-center text-red-500">Failed to load room details: ${error.message}</p>`;
             }
         });
     </script>
