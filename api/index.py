@@ -1,0 +1,39 @@
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from pymongo import MongoClient
+import os
+import traceback
+
+app = Flask(__name__)
+CORS(app)
+
+# MongoDB
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://hetbutani57:het5130O@cluster0.fqkimyy.mongodb.net/")
+client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+db = client['hotel_management_db']
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    # This will catch everything sent to this function
+    # We will manually route based on the path
+    try:
+        if 'rooms/featured' in path:
+            rooms = list(db['rooms'].find({}, {'_id': 0}))
+            return jsonify(rooms)
+        elif 'rooms/details' in path:
+            title = path.split('/')[-1]
+            room = db['rooms'].find_one({"title": title}, {'_id': 0})
+            return jsonify(room) if room else (jsonify({"error": "not found"}), 404)
+        elif 'reviews' in path:
+            reviews = list(db['reviews'].find({}, {'_id': 0}))
+            return jsonify(reviews)
+        elif 'health' in path:
+            return jsonify({"status": "ok", "path_received": path})
+        
+        return jsonify({"error": "route not matched", "path": path}), 404
+    except Exception as e:
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+if __name__ == '__main__':
+    app.run()
