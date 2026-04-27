@@ -28,6 +28,10 @@ reviews_collection = db['reviews']
 bookings_collection = db['bookings']
 contacts_collection = db['contacts']
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "API is running on Vercel"}), 200
+
 # --- Routes: Auth ---
 
 @app.route('/api/auth/signup', methods=['POST'])
