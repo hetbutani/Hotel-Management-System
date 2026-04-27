@@ -103,7 +103,10 @@
 
             try {
                 const response = await fetch(`/api/rooms/details/${encodeURIComponent(roomTitle)}`);
-                if (!response.ok) throw new Error('Room not found');
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Server returned ${response.status}: ${errorData.error || response.statusText}`);
+                }
                 
                 const room = await response.json();
                 
