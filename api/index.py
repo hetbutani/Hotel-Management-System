@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 import bcrypt
 import os
 import razorpay
+import traceback
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -18,151 +19,109 @@ RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_YourKeyId")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "YourKeySecret")
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# MongoDB Connection
+# MongoDB Connection with Timeout
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://hetbutani57:het5130O@cluster0.fqkimyy.mongodb.net/")
-client = MongoClient(MONGO_URI)
-db = client['hotel_management_db']
-rooms_collection = db['rooms']
-users_collection = db['users']
-reviews_collection = db['reviews']
-bookings_collection = db['bookings']
-contacts_collection = db['contacts']
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    db = client['hotel_management_db']
+    # Trigger a connection check
+    client.admin.command('ping')
+    print("MongoDB Connected Successfully")
+except Exception as e:
+    print(f"MongoDB Connection Error: {e}")
 
-# Health check
+# Helper for collections (to avoid early crash)
+def get_coll(name):
+    return db[name]
+
+# --- Routes ---
+
 @app.route('/api/health')
 @app.route('/health')
 def health_check():
-    return jsonify({"status": "healthy", "message": "API is running on Vercel"}), 200
+    return jsonify({"status": "healthy", "database": "connected" if db else "failed"}), 200
 
-# Auth
-@app.route('/api/auth/signup', methods=['POST'])
-@app.route('/auth/signup', methods=['POST'])
-def signup():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    if users_collection.find_one({"email": email}):
-        return jsonify({"message": "User already exists"}), 400
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-    users_collection.insert_one({"email": email, "password": hashed_password, "role": data.get('role', 'Guest')})
-    return jsonify({"message": "User created successfully"}), 201
-
-@app.route('/api/auth/login', methods=['POST'])
-@app.route('/auth/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    user = users_collection.find_one({"email": data.get('email')})
-    if user and bcrypt.checkpw(data.get('password').encode('utf-8'), user['password']):
-        access_token = create_access_token(identity={"email": user['email'], "role": user['role']})
-        return jsonify(access_token=access_token, role=user['role']), 200
-    return jsonify({"message": "Invalid email or password"}), 401
-
-# Rooms
 @app.route('/api/rooms/featured')
 @app.route('/rooms/featured')
 def get_featured_rooms():
     try:
-        rooms = list(rooms_collection.find({}, {'_id': 0}))
+        rooms = list(get_coll('rooms').find({}, {'_id': 0}))
         return jsonify(rooms), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/rooms/search', methods=['POST'])
-@app.route('/rooms/search', methods=['POST'])
-def search_rooms():
-    try:
-        data = request.get_json()
-        guests_str = data.get('guests', '1 Guest')
-        guests = int(guests_str.split(' ')[0].replace('+', ''))
-        query = {"capacity": {"$gte": guests}}
-        available_rooms = list(rooms_collection.find(query, {'_id': 0}))
-        return jsonify(available_rooms), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 @app.route('/api/rooms/details/<title>')
 @app.route('/rooms/details/<title>')
 def get_room_details(title):
     try:
-        room = rooms_collection.find_one({"title": title}, {'_id': 0})
+        room = get_coll('rooms').find_one({"title": title}, {'_id': 0})
         if room:
             return jsonify(room), 200
-        return jsonify({"message": f"Room '{title}' not found"}), 404
+        return jsonify({"error": f"Room '{title}' not found"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
-# Bookings
+@app.route('/api/reviews')
+@app.route('/reviews')
+def get_reviews():
+    try:
+        reviews = list(get_coll('reviews').find({}, {'_id': 0}))
+        return jsonify(reviews), 200
+    except Exception as e:
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+# Add other routes similarly...
 @app.route('/api/bookings', methods=['POST'])
 @app.route('/bookings', methods=['POST'])
 def create_booking():
     try:
         data = request.get_json()
-        booking = {
+        get_coll('bookings').insert_one({
             "room_title": data.get('room_title'),
             "check_in": data.get('check_in'),
             "check_out": data.get('check_out'),
             "guests": data.get('guests'),
-            "status": "Confirmed",
-            "payment_id": data.get('payment_id')
-        }
-        bookings_collection.insert_one(booking)
+            "payment_id": data.get('payment_id'),
+            "status": "Confirmed"
+        })
         return jsonify({"message": "Booking successful"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Payments
-@app.route('/api/payments/create_order', methods=['POST'])
-@app.route('/payments/create_order', methods=['POST'])
-def create_payment_order():
+@app.route('/api/contact', methods=['POST'])
+@app.route('/contact', methods=['POST'])
+def handle_contact():
     try:
         data = request.get_json()
-        amount = int(data.get('amount')) * 100
-        order = razorpay_client.order.create(data={"amount": amount, "currency": "INR", "payment_capture": 1})
+        get_coll('contacts').insert_one({
+            "name": data.get('name'),
+            "email": data.get('email'),
+            "subject": data.get('subject'),
+            "message": data.get('message')
+        })
+        return jsonify({"message": "Sent"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/payments/create_order', methods=['POST'])
+@app.route('/payments/create_order', methods=['POST'])
+def create_order():
+    try:
+        data = request.get_json()
+        order = razorpay_client.order.create(data={"amount": int(data['amount'])*100, "currency": "INR", "payment_capture": 1})
         return jsonify(order), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/payments/verify', methods=['POST'])
 @app.route('/payments/verify', methods=['POST'])
-def verify_payment():
+def verify():
     try:
         data = request.get_json()
-        params_dict = {
-            'razorpay_order_id': data.get('razorpay_order_id'),
-            'razorpay_payment_id': data.get('razorpay_payment_id'),
-            'razorpay_signature': data.get('razorpay_signature')
-        }
-        razorpay_client.utility.verify_payment_signature(params_dict)
-        return jsonify({"message": "Payment verified successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": "Payment verification failed"}), 400
-
-# Contact
-@app.route('/api/contact', methods=['POST'])
-@app.route('/contact', methods=['POST'])
-def handle_contact():
-    try:
-        data = request.get_json()
-        contacts_collection.insert_one({
-            "name": data.get('name'),
-            "email": data.get('email'),
-            "subject": data.get('subject'),
-            "message": data.get('message'),
-            "status": "New"
-        })
-        return jsonify({"message": "Message sent successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Reviews
-@app.route('/api/reviews')
-@app.route('/reviews')
-def get_reviews():
-    try:
-        reviews = list(reviews_collection.find({}, {'_id': 0}))
-        return jsonify(reviews), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        razorpay_client.utility.verify_payment_signature(data)
+        return jsonify({"status": "verified"}), 200
+    except:
+        return jsonify({"status": "failed"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
