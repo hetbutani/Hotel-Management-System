@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
+from urllib.parse import unquote
 import os
 import traceback
 
@@ -29,9 +30,9 @@ def catch_all(path):
             available_rooms = list(db['rooms'].find(query, {'_id': 0}))
             return jsonify(available_rooms)
         elif 'rooms/details' in path:
-            title = path.split('/')[-1]
+            title = unquote(path.split('/')[-1])
             room = db['rooms'].find_one({"title": title}, {'_id': 0})
-            return jsonify(room) if room else (jsonify({"error": f"Room '{title}' not found"}), 404)
+            return jsonify(room) if room else (jsonify({"error": f"Room '{title}' not found in database"}), 404)
         elif 'bookings' in path:
             data = request.get_json()
             db['bookings'].insert_one({
