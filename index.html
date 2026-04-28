@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.location.href = `room_details.html?room=${encodeURIComponent(room.title)}`;
             });
 
-            card.querySelector('.select-room').addEventListener('click', async () => {
+            card.querySelector('.select-room').addEventListener('click', () => {
                 const checkIn = document.getElementById('check-in').value;
                 const checkOut = document.getElementById('check-out').value;
                 const guests = document.getElementById('guest-count').value;
@@ -256,25 +256,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     return;
                 }
 
-                try {
-                    const res = await fetch('/api/bookings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            room_title: room.title,
-                            check_in: checkIn,
-                            check_out: checkOut,
-                            guests: guests
-                        })
-                    });
-                    if (res.ok) {
-                        alert(`Success! You have successfully selected the ${room.title}. We look forward to seeing you!`);
-                    } else {
-                        alert('Booking failed. Please try again.');
-                    }
-                } catch (e) {
-                    alert('Error connecting to booking service.');
-                }
+                // Open Booking Modal
+                const modal = document.getElementById('bookingModal');
+                document.getElementById('modalRoomTitle').innerText = room.title;
+                document.getElementById('modalDates').innerText = `${checkIn} to ${checkOut}`;
+                
+                // Store data for the final submission
+                window.currentBooking = {
+                    room_title: room.title,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    guests: guests
+                };
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
             });
 
             container.appendChild(card);
@@ -505,4 +501,72 @@ document.getElementById('contact-form')?.addEventListener('submit', async (e) =>
             </div>
 </div>
 </footer>
+<!-- Booking Modal -->
+<div id="bookingModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all">
+        <div class="bg-primary p-6 text-white">
+            <h3 class="text-xl font-bold mb-1">Confirm Your Stay</h3>
+            <p id="modalRoomTitle" class="text-primary-fixed-dim font-medium"></p>
+            <p id="modalDates" class="text-xs opacity-80 uppercase tracking-widest mt-2"></p>
+        </div>
+        
+        <form id="bookingForm" class="p-8 space-y-5">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Full Name</label>
+                <input type="text" id="custName" required placeholder="John Doe" class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-primary transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Email Address</label>
+                <input type="email" id="custEmail" required placeholder="john@example.com" class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-primary transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Phone Number</label>
+                <input type="tel" id="custPhone" required placeholder="+1 (555) 000-0000" class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-primary transition-all">
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="document.getElementById('bookingModal').classList.add('hidden')" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all">Cancel</button>
+                <button type="submit" class="flex-2 bg-primary hover:bg-surface-tint text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-all active:scale-95">Confirm Booking</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.innerText = 'Processing...';
+    btn.disabled = true;
+
+    const bookingData = {
+        ...window.currentBooking,
+        customer_name: document.getElementById('custName').value,
+        customer_email: document.getElementById('custEmail').value,
+        customer_phone: document.getElementById('custPhone').value,
+        created_at: new Date().toISOString()
+    };
+
+    try {
+        const res = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        });
+        
+        if (res.ok) {
+            alert(`Booking Confirmed! Thank you, ${bookingData.customer_name}. We have sent a confirmation to ${bookingData.customer_email}.`);
+            document.getElementById('bookingModal').classList.add('hidden');
+            e.target.reset();
+        } else {
+            alert('Something went wrong. Please try again.');
+        }
+    } catch (err) {
+        alert('Connection error. Please check if the backend is running.');
+    } finally {
+        btn.innerText = 'Confirm Booking';
+        btn.disabled = false;
+    }
+});
+</script>
 </body></html>

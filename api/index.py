@@ -78,8 +78,11 @@ def catch_all(path):
                 "check_out": data.get('check_out'),
                 "guests": data.get('guests'),
                 "customer_name": data.get('customer_name', 'Guest User'),
+                "customer_email": data.get('customer_email', ''),
+                "customer_phone": data.get('customer_phone', ''),
                 "status": "Confirmed",
-                "payment_id": data.get('payment_id')
+                "payment_id": data.get('payment_id'),
+                "created_at": data.get('created_at')
             })
             return jsonify({"message": "Booking successful"}), 201
 
