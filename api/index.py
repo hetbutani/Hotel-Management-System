@@ -1,27 +1,61 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pymongo import MongoClient
-from urllib.parse import unquote
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import bcrypt
 import os
+import razorpay
 import traceback
+from urllib.parse import unquote
 
 app = Flask(__name__)
 CORS(app)
+
+# JWT Configuration
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "luxe-stay-secret-key")
+jwt = JWTManager(app)
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "rzp_test_YourKeyId")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "YourKeySecret")
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # MongoDB
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://hetbutani57:het5130O@cluster0.fqkimyy.mongodb.net/")
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client['hotel_management_db']
 
-@app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
-@app.route('/<path:path>', methods=['GET', 'POST'])
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
+@app.route('/<path:path>', methods=['GET', 'POST', 'OPTIONS'])
 def catch_all(path):
-    # This will catch everything sent to this function
-    # We will manually route based on the path
     try:
-        if 'rooms/featured' in path:
+        # Auth Routes
+        if 'auth/login' in path and request.method == 'POST':
+            data = request.get_json()
+            email = data.get('email')
+            password = data.get('password')
+            user = db['users'].find_one({"email": email})
+            if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+                access_token = create_access_token(identity={"email": email, "role": user['role']})
+                return jsonify(access_token=access_token, role=user['role']), 200
+            return jsonify({"message": "Invalid email or password"}), 401
+            
+        elif 'auth/signup' in path and request.method == 'POST':
+            data = request.get_json()
+            email = data.get('email')
+            password = data.get('password')
+            role = data.get('role', 'Guest')
+            if db['users'].find_one({"email": email}):
+                return jsonify({"message": "User already exists"}), 400
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            db['users'].insert_one({"email": email, "password": hashed_password, "role": role})
+            return jsonify({"message": "User created successfully"}), 201
+
+        # Room Routes
+        elif 'rooms/featured' in path:
             rooms = list(db['rooms'].find({}, {'_id': 0}))
             return jsonify(rooms)
+            
         elif 'rooms/search' in path:
             data = request.get_json()
             guests_str = data.get('guests', '1 Guest')
@@ -29,23 +63,55 @@ def catch_all(path):
             query = {"capacity": {"$gte": guests}}
             available_rooms = list(db['rooms'].find(query, {'_id': 0}))
             return jsonify(available_rooms)
+            
         elif 'rooms/details' in path:
             title = unquote(path.split('/')[-1])
             room = db['rooms'].find_one({"title": title}, {'_id': 0})
-            return jsonify(room) if room else (jsonify({"error": f"Room '{title}' not found in database"}), 404)
-        elif 'bookings' in path:
+            return jsonify(room) if room else (jsonify({"error": f"Room '{title}' not found"}), 404)
+
+        # Booking Routes
+        elif 'bookings' in path and request.method == 'POST':
             data = request.get_json()
             db['bookings'].insert_one({
                 "room_title": data.get('room_title'),
                 "check_in": data.get('check_in'),
                 "check_out": data.get('check_out'),
                 "guests": data.get('guests'),
-                "status": "Confirmed"
+                "customer_name": data.get('customer_name', 'Guest User'),
+                "status": "Confirmed",
+                "payment_id": data.get('payment_id')
             })
             return jsonify({"message": "Booking successful"}), 201
+
+        # Review Routes
         elif 'reviews' in path:
             reviews = list(db['reviews'].find({}, {'_id': 0}))
             return jsonify(reviews)
+
+        # Payment Routes
+        elif 'payments/create_order' in path and request.method == 'POST':
+            data = request.get_json()
+            amount = int(data.get('amount')) * 100
+            order = razorpay_client.order.create(data={"amount": amount, "currency": "INR", "payment_capture": 1})
+            return jsonify(order), 200
+            
+        elif 'payments/verify' in path and request.method == 'POST':
+            data = request.get_json()
+            razorpay_client.utility.verify_payment_signature(data)
+            return jsonify({"message": "Payment verified successfully"}), 200
+
+        # Contact Route
+        elif 'contact' in path and request.method == 'POST':
+            data = request.get_json()
+            db['contacts'].insert_one({
+                "name": data.get('name'),
+                "email": data.get('email'),
+                "subject": data.get('subject'),
+                "message": data.get('message'),
+                "status": "New"
+            })
+            return jsonify({"message": "Message sent successfully"}), 201
+
         elif 'health' in path:
             return jsonify({"status": "ok", "path_received": path})
         
