@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Manage Bookings - LuxeStay</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        // Authentication Check
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (!token || role !== 'Admin') window.location.href = '../auth/login.html';
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.href = '../auth/login.html';
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex">
+    <!-- Sidebar (Same as code.html) -->
+    <nav class="fixed left-0 top-0 h-screen w-64 border-r border-slate-200 bg-slate-50 py-6 px-4 z-50 flex flex-col">
+        <div class="mb-8 px-4"><span class="text-lg font-bold text-blue-700 tracking-tight">LuxeStay</span></div>
+        <div class="flex flex-col gap-2 flex-grow">
+            <a href="code.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 transition-all">
+                <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-bold border-r-4 border-blue-600">
+                <span class="material-symbols-outlined">calendar_month</span><span>Bookings</span>
+            </a>
+            <a href="../guest_landing_page/code.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 mt-auto">
+                <span class="material-symbols-outlined">public</span><span>View Site</span>
+            </a>
+            <a href="javascript:void(0)" onclick="logout()" class="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50">
+                <span class="material-symbols-outlined">logout</span><span>Sign Out</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 flex flex-col min-h-screen">
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 h-16 flex items-center justify-between">
+            <h1 class="text-xl font-black text-slate-800">Booking Management</h1>
+            <div class="flex items-center gap-4">
+                <span class="text-sm font-medium text-slate-500">Admin Control Panel</span>
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">AJ</div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-slate-800">All Reservations</h2>
+                    <button onclick="loadBookings()" class="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-all">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                                <th class="px-6 py-4">Guest Details</th>
+                                <th class="px-6 py-4">Room Type</th>
+                                <th class="px-6 py-4">Check In/Out</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Transaction ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-table-body" class="divide-y divide-slate-100">
+                            <!-- Rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function loadBookings() {
+            const tbody = document.getElementById('bookings-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-slate-400">Loading bookings...</td></tr>';
+
+            try {
+                const response = await fetch('/api/admin/bookings');
+                const bookings = await response.json();
+
+                if (bookings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-slate-400">No bookings found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                bookings.forEach(b => {
+                    const row = `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-800">${b.customer_name || 'Guest User'}</div>
+                                <div class="text-xs text-slate-400">${b.customer_email || 'No Email'}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-slate-700">${b.room_title}</div>
+                                <div class="text-xs text-slate-400">${b.guests} Guests</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-xs font-bold text-slate-600">${b.check_in}</div>
+                                <div class="text-[10px] text-slate-400">to ${b.check_out}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                    ${b.status || 'Confirmed'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-mono text-[10px] text-slate-400">${b.payment_id || 'N/A'}</div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-20 text-red-500 font-bold">Failed to connect to database.</td></tr>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadBookings);
+    </script>
+</body>
+</html>

@@ -136,6 +136,11 @@ def catch_all(path):
                 "recent_bookings": recent_bookings
             })
 
+        # All Bookings Route
+        elif 'admin/bookings' in path:
+            bookings = list(db['bookings'].find({}, {'_id': 0}).sort('_id', -1))
+            return jsonify(bookings)
+
         elif 'health' in path:
             return jsonify({"status": "ok", "path_received": path})
         
