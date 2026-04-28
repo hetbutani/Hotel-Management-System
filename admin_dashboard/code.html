@@ -207,7 +207,7 @@
 <span class="font-body-md text-body-md">Total Rooms</span>
 <span class="material-symbols-outlined text-primary">key</span>
 </div>
-<div class="font-stat-value text-stat-value text-on-surface mt-xs">142</div>
+<div id="stat-total-rooms" class="font-stat-value text-stat-value text-on-surface mt-xs">...</div>
 <div class="text-tertiary font-body-sm text-body-sm flex items-center gap-1 mt-auto">
 <span class="material-symbols-outlined text-[16px]">trending_up</span>
 <span>100% Available</span>
@@ -219,7 +219,7 @@
 <span class="font-body-md text-body-md">Today's Bookings</span>
 <span class="material-symbols-outlined text-secondary-container">calendar_today</span>
 </div>
-<div class="font-stat-value text-stat-value text-on-surface mt-xs">28</div>
+<div id="stat-today-bookings" class="font-stat-value text-stat-value text-on-surface mt-xs">...</div>
 <div class="text-tertiary font-body-sm text-body-sm flex items-center gap-1 mt-auto">
 <span class="material-symbols-outlined text-[16px]">trending_up</span>
 <span>+4 from yesterday</span>
@@ -231,7 +231,7 @@
 <span class="font-body-md text-body-md">Revenue</span>
 <span class="material-symbols-outlined text-tertiary">payments</span>
 </div>
-<div class="font-stat-value text-stat-value text-on-surface mt-xs">$12,450</div>
+<div id="stat-revenue" class="font-stat-value text-stat-value text-on-surface mt-xs">...</div>
 <div class="text-tertiary font-body-sm text-body-sm flex items-center gap-1 mt-auto">
 <span class="material-symbols-outlined text-[16px]">trending_up</span>
 <span>+8.2% vs last week</span>
@@ -243,7 +243,7 @@
 <span class="font-body-md text-body-md">Occupancy Rate</span>
 <span class="material-symbols-outlined">hotel</span>
 </div>
-<div class="font-stat-value text-stat-value mt-xs">84%</div>
+<div id="stat-occupancy" class="font-stat-value text-stat-value mt-xs">...</div>
 <div class="font-body-sm text-body-sm flex items-center gap-1 mt-auto text-on-primary/90">
 <span class="material-symbols-outlined text-[16px]">trending_up</span>
 <span>Optimal range</span>
@@ -283,49 +283,9 @@
 <h2 class="font-h3 text-h3 text-on-surface">Recent Activity</h2>
 <button class="text-primary font-body-sm text-body-sm hover:bg-surface-container-low px-3 py-1 rounded-full transition-colors">See All</button>
 </div>
-<div class="flex flex-col gap-md">
-<!-- Table Row 1 -->
-<div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold">SM</div>
-<div class="flex flex-col">
-<span class="font-body-md text-body-md font-semibold text-on-surface">Sarah Miller</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Deluxe Suite • 2 Nights</span>
-</div>
-</div>
-<div class="bg-tertiary-fixed/30 text-tertiary px-2 py-1 rounded-md font-label-caps text-label-caps flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">check_circle</span>
-                                Confirmed
-                            </div>
-</div>
-<!-- Table Row 2 -->
-<div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold">JD</div>
-<div class="flex flex-col">
-<span class="font-body-md text-body-md font-semibold text-on-surface">James Davis</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Standard • 1 Night</span>
-</div>
-</div>
-<div class="bg-secondary-container/30 text-secondary px-2 py-1 rounded-md font-label-caps text-label-caps flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">pending</span>
-                                Pending
-                            </div>
-</div>
-<!-- Table Row 3 -->
-<div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold">EW</div>
-<div class="flex flex-col">
-<span class="font-body-md text-body-md font-semibold text-on-surface">Emma Wilson</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Penthouse • 4 Nights</span>
-</div>
-</div>
-<div class="bg-tertiary-fixed/30 text-tertiary px-2 py-1 rounded-md font-label-caps text-label-caps flex items-center gap-1">
-<span class="material-symbols-outlined text-[14px]">check_circle</span>
-                                Confirmed
-                            </div>
-</div>
+<div id="recent-activity-list" class="flex flex-col gap-md">
+    <!-- Activity rows will be injected here -->
+    <p class="text-center text-slate-400 py-10">Loading activity...</p>
 </div>
 </div>
 </div>
@@ -343,4 +303,53 @@
 </div>
 </footer>
 </main>
+<script>
+    async function updateDashboard() {
+        try {
+            const response = await fetch('/api/admin/stats');
+            const data = await response.json();
+
+            document.getElementById('stat-total-rooms').innerText = data.total_rooms;
+            document.getElementById('stat-today-bookings').innerText = data.total_bookings; // Simplified for now
+            document.getElementById('stat-revenue').innerText = `$${data.total_revenue.toLocaleString()}`;
+            
+            // Occupancy calculation
+            const occupancy = data.total_rooms > 0 ? Math.round((data.total_bookings / data.total_rooms) * 100) : 0;
+            document.getElementById('stat-occupancy').innerText = `${Math.min(occupancy, 100)}%`;
+
+            // Recent Activity
+            const list = document.getElementById('recent-activity-list');
+            list.innerHTML = '';
+            
+            if (data.recent_bookings.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-400 py-10">No recent bookings found.</p>';
+            }
+
+            data.recent_bookings.forEach(booking => {
+                const initials = booking.customer_name ? booking.customer_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'GU';
+                const row = `
+                    <div class="flex items-center justify-between p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold text-xs">${initials}</div>
+                            <div class="flex flex-col">
+                                <span class="font-body-md text-body-md font-semibold text-on-surface">${booking.customer_name || 'Guest User'}</span>
+                                <span class="font-body-sm text-body-sm text-on-surface-variant">${booking.room_title} • ${booking.guests}</span>
+                            </div>
+                        </div>
+                        <div class="bg-tertiary-fixed/30 text-tertiary px-2 py-1 rounded-md font-label-caps text-label-caps flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                            ${booking.status || 'Confirmed'}
+                        </div>
+                    </div>
+                `;
+                list.innerHTML += row;
+            });
+
+        } catch (error) {
+            console.error('Failed to update dashboard:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', updateDashboard);
+</script>
 </body></html>

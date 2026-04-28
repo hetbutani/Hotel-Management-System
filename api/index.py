@@ -115,6 +115,27 @@ def catch_all(path):
             })
             return jsonify({"message": "Message sent successfully"}), 201
 
+        # Admin Stats Route
+        elif 'admin/stats' in path:
+            total_rooms = db['rooms'].count_documents({})
+            total_bookings = db['bookings'].count_documents({})
+            recent_bookings = list(db['bookings'].find({}, {'_id': 0}).sort('_id', -1).limit(5))
+            
+            # Simple revenue calculation (sum of prices of rooms in bookings)
+            # This is a bit slow but fine for small datasets
+            total_revenue = 0
+            for b in db['bookings'].find({}):
+                room = db['rooms'].find_one({"title": b.get('room_title')})
+                if room:
+                    total_revenue += room.get('price', 0)
+
+            return jsonify({
+                "total_rooms": total_rooms,
+                "total_bookings": total_bookings,
+                "total_revenue": total_revenue,
+                "recent_bookings": recent_bookings
+            })
+
         elif 'health' in path:
             return jsonify({"status": "ok", "path_received": path})
         
