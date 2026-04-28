@@ -141,6 +141,19 @@ def catch_all(path):
             bookings = list(db['bookings'].find({}, {'_id': 0}).sort('_id', -1))
             return jsonify(bookings)
 
+        # Staff Directory Route
+        elif 'admin/staff' in path:
+            # We'll fetch from a 'staff' collection. If it doesn't exist, we'll return sample data.
+            staff_list = list(db['staff'].find({}, {'_id': 0}))
+            if not staff_list:
+                # Fallback sample data if collection is empty
+                staff_list = [
+                    {"staff_id": "STF001", "name": "John Doe", "room": "Ocean View Suite", "customer": "Sarah Miller"},
+                    {"staff_id": "STF002", "name": "Jane Smith", "room": "Executive Room", "customer": "James Davis"},
+                    {"staff_id": "STF003", "name": "Mike Ross", "room": "Penthouse Loft", "customer": "Emma Wilson"}
+                ]
+            return jsonify(staff_list)
+
         elif 'health' in path:
             return jsonify({"status": "ok", "path_received": path})
         
