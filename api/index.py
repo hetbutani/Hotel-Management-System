@@ -88,8 +88,20 @@ def catch_all(path):
 
         # Review Routes
         elif 'reviews' in path:
-            reviews = list(db['reviews'].find({}, {'_id': 0}))
-            return jsonify(reviews)
+            if request.method == 'POST':
+                data = request.get_json()
+                db['reviews'].insert_one({
+                    "name": data.get('name'),
+                    "role": data.get('role', 'Guest'),
+                    "content": data.get('content'),
+                    "rating": int(data.get('rating', 5)),
+                    "avatar": f"https://i.pravatar.cc/150?u={data.get('name')}",
+                    "created_at": data.get('created_at')
+                })
+                return jsonify({"message": "Review submitted successfully"}), 201
+            else:
+                reviews = list(db['reviews'].find({}, {'_id': 0}).sort('_id', -1))
+                return jsonify(reviews)
 
         # Payment Routes
         elif 'payments/create_order' in path and request.method == 'POST':
